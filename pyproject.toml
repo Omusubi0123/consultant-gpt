@@ -6,7 +6,7 @@ authors = []
 
 readme = "README.md"
 packages = [
-    { include = "scraping", from = "." },
+    { include = "scraping" },
 ]
 
 [tool.poetry.dependencies]
