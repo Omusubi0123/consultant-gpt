@@ -1,6 +1,6 @@
 import os
 from time import sleep
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urljoin
 
 import pandas as pd
@@ -27,6 +27,20 @@ def get_question_urls(
     timeout: int = 20,
     error_sleep: int = 5,
 ):
+    """指定したカテゴリの質問一覧ページから質問のURLを取得し、CSVファイルに保存する
+
+    Args:
+        driver (webdriver.Chrome): chrome driver
+        category (str): カテゴリ名
+        base_url (str): 質問一覧ページのURL
+        category_id (int):  教えてgooのカテゴリID
+        page_num (int): 取得するページ数
+        key (Literal[&quot;new&quot;, &quot;best&quot;, &quot;ranking&quot;, &quot;ans_num&quot;]): 取得する質問の種類
+        save_path (str, optional): 保存先のファイルパス. Defaults to &quot;data/goo_question/{category}_questions.csv&quot;.
+        max_retry (int, optional): 最大リトライ回数. Defaults to 3.
+        timeout (int, optional): ページ読み込みのタイムアウト時間. Defaults to 20.
+        error_sleep (int, optional): エラー時の待機時間. Defaults to 5.
+    """
     save_path = save_path.format(category=category)
 
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -94,7 +108,16 @@ def get_question_urls(
     question_df.to_csv(save_path, index=False)
 
 
-def get_category_questions(driver, category_dict, base_url):
+def get_category_questions(
+    driver: webdriver.Chrome, category_dict: dict[str, Any], base_url: dict[str, str]
+):
+    """9つのカテゴリそれぞれについて、質問一覧ページから質問のURLを取得し、CSVファイルに保存する
+
+    Args:
+        driver (webdriver.Chrome): chrome driver
+        category_dict (dict): 9つのカテゴリに関する情報を格納した辞書
+        base_url (dict): 質問一覧ページのURL
+    """
     for category, value in category_dict.items():
         category_id = value["category_id"]
         page_num = value["page_num"]
@@ -108,10 +131,13 @@ def get_category_questions(driver, category_dict, base_url):
 if __name__ == "__main__":
     timeout = 20
 
+    # Chromeのオプションを設定
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--dns-prefetch-disable")
     service = Service("/usr/local/bin/chromedriver-linux64/chromedriver")
+
+    # Chromeを起動
     driver = webdriver.Chrome(service=service, options=chrome_options)
     driver.timeouts.page_load = timeout * 1000
 
