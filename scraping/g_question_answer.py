@@ -19,10 +19,8 @@ from scraping.g_category_info import base_url, category_dict
 
 
 def get_question_answer(
-    driver: webdriver.Chrome,
     url: str,
     max_retry: int = 3,
-    timeout: int = 20,
     error_sleep: int = 5,
 ):
     """指定したURLにアクセスし、そのページのquestionとすべてのanswerを取得する
@@ -63,7 +61,6 @@ def get_question_answer(
 
 
 def get_category_question_answer(
-    driver: webdriver.Chrome,
     category_dict: dict[str, Any],
     csv_path: str = "data/goo_question/{}_questions.csv",
     save_file: str = "data/goo_q_n_a/{}.jsonl",
@@ -81,9 +78,7 @@ def get_category_question_answer(
 
         q_a_df = pd.DataFrame(columns=["q_id", "q_title", "q_text", "a_texts"])
         for i, url in enumerate(tqdm(df["url"], total=len(df))):
-            question_title, question_text, answer_texts = get_question_answer(
-                driver, url
-            )
+            question_title, question_text, answer_texts = get_question_answer(url)
             question_id = re.search(r"/qa/(\d+)", url).group(1)
             if question_title is not None:
                 q_a_dict = {
