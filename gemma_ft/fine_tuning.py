@@ -1,18 +1,17 @@
 import os
 from datetime import date
 
-import wandb
+import torch
 from datasets import Dataset
+from dotenv import load_dotenv
 from peft import LoraConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer
 
-from fine_tuning.gemma_format import format_qa_to_prompt
-from fine_tuning.jsonl_dataset import JSONLDataset
+import wandb
+from gemma_ft.gemma_format import format_qa_to_prompt
+from gemma_ft.jsonl_dataset import JSONLDataset
 from scraping.g_category_info import category_dict
-
-os.environ["HF_TOKEN"] = os.getenv("HF_TOKEN")
-os.environ["WANDB_API_KEY"] = os.getenv("WANDB_API_KEY")
 
 
 def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl") -> Dataset:
@@ -26,11 +25,14 @@ def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl") -> Dataset:
     return dataset
 
 
-def load_model(repo_id: str = "google/gemma-2-2b-it") -> tuple:
+def load_model(repo_id: str = "google/gemma-2-2b-jpn-it") -> tuple:
     model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=repo_id,
-        device_map={"": "cuda"},
+        # device_map={"": "cuda"},
+        device_map="auto",
+        torch_dtype=torch.float16,
         attn_implementation="eager",
+        token=os.environ["HF_TOKEN"],
     )
     model.config.use_cache = False
     model.config.pretraining_tp = 1
@@ -39,6 +41,7 @@ def load_model(repo_id: str = "google/gemma-2-2b-it") -> tuple:
         pretrained_model_name_or_path=repo_id,
         attn_implementation="eager",
         add_eos_token=True,
+        token=os.environ["HF_TOKEN"],
     )
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -59,7 +62,7 @@ def set_lora_config():
 
 
 def fine_tuning(
-    repo_id: str = "google/gemma-2-2b-it",
+    repo_id: str = "google/gemma-2-2b-jpn-it",
     dataset_path: str = "./data/goo_q_n_a/{category}.jsonl",
     save_dir: str = "./model/gemma-ft-{date}",
     output_dir: str = "./model/gemma-ft-log-{date}",
@@ -72,14 +75,21 @@ def fine_tuning(
     max_seq_length: int = 8192,
     wandb_project: str = "gemma-fine-tuning",
 ):
-    wandb.init(project=wandb_project)
+    print(f"device: {torch.cuda.is_available()}")
 
+    print("Load dataset")
     dataset = load_dataset(dataset_path)
+
+    print("Load model")
     model, tokenizer = load_model(repo_id)
     lora_config = set_lora_config()
 
     today = date.today().strftime("%Y%m%d")
 
+    print("Set wandb project: ", wandb_project)
+    wandb.init(project=wandb_project)
+
+    print("Start fine-tuning")
     training_arguments = TrainingArguments(
         output_dir=output_dir.format(date=today),
         fp16=True,  # fp16を使用
@@ -114,5 +124,8 @@ def fine_tuning(
     wandb.finish()
 
 
-if __json__ == "__main__":
+if __name__ == "__main__":
+    load_dotenv()
+    os.environ["HF_TOKEN"] = os.getenv("HF_TOKEN")
+    os.environ["WANDB_API_KEY"] = os.getenv("WANDB_API_KEY")
     fine_tuning()

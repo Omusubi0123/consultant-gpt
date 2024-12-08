@@ -6,7 +6,7 @@ authors = []
 
 readme = "README.md"
 packages = [
-    { include = "fine_tuning" },
+    { include = "gemma_ft" },
     { include = "scraping" },
 ]
 
@@ -23,6 +23,8 @@ datasets = "^3.1.0"
 peft = "^0.14.0"
 trl = "^0.12.2"
 wandb = "^0.19.0"
+python-dotenv = "^1.0.1"
+numpy = "1.26.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.13.2"
