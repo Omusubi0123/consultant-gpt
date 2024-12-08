@@ -1,6 +1,7 @@
 import os
+from datetime import date
 
-import torch
+import wandb
 from datasets import Dataset
 from peft import LoraConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
@@ -10,8 +11,8 @@ from fine_tuning.gemma_format import format_qa_to_prompt
 from fine_tuning.jsonl_dataset import JSONLDataset
 from scraping.g_category_info import category_dict
 
-# huggingfaceトークンの設定（gemma2を使用するのに必要なため）
 os.environ["HF_TOKEN"] = os.getenv("HF_TOKEN")
+os.environ["WANDB_API_KEY"] = os.getenv("WANDB_API_KEY")
 
 
 def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl") -> Dataset:
@@ -26,34 +27,27 @@ def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl") -> Dataset:
 
 
 def load_model(repo_id: str = "google/gemma-2-2b-it") -> tuple:
-    # Decoder Model
     model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=repo_id,
         device_map={"": "cuda"},
         attn_implementation="eager",
     )
-    # キャッシュを無効化（メモリ使用量を削減）
     model.config.use_cache = False
-    # テンソル並列ランクを１に設定（テンソル並列化を使用しない）
     model.config.pretraining_tp = 1
 
-    # Tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
         pretrained_model_name_or_path=repo_id,
         attn_implementation="eager",
         add_eos_token=True,
     )
-    # パディングトークンが設定されていない場合、EOSトークンを設定
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    # パディングを右側に設定(fp16を使う際のオーバーフロー対策)
     tokenizer.padding_side = "right"
 
     return model, tokenizer
 
 
 def set_lora_config():
-    # LoRAのConfigを設定
     Lora_config = LoraConfig(
         lora_alpha=8,  # LoRAによる学習の影響力を調整（スケーリング)
         lora_dropout=0.1,  # ドロップアウト率
@@ -64,48 +58,61 @@ def set_lora_config():
     return Lora_config
 
 
-def fine_tuning():
-    dataset = load_dataset()
-    model, tokenizer = load_model()
+def fine_tuning(
+    repo_id: str = "google/gemma-2-2b-it",
+    dataset_path: str = "./data/goo_q_n_a/{category}.jsonl",
+    save_dir: str = "./model/gemma-ft-{date}",
+    output_dir: str = "./model/gemma-ft-log-{date}",
+    train_epoch: int = 4,
+    per_device_train_batch_size: int = 16,
+    gradient_accumulation_steps: int = 8,
+    max_grad_norm: float = 0.3,
+    warmup_step_rate: float = 0.03,
+    learning_rate: float = 5e-5,
+    max_seq_length: int = 8192,
+    wandb_project: str = "gemma-fine-tuning",
+):
+    wandb.init(project=wandb_project)
+
+    dataset = load_dataset(dataset_path)
+    model, tokenizer = load_model(repo_id)
     lora_config = set_lora_config()
 
-    # 学習パラメータを設定
+    today = date.today().strftime("%Y%m%d")
+
     training_arguments = TrainingArguments(
-        output_dir="./train_logs",  # ログの出力ディレクトリ
+        output_dir=output_dir.format(date=today),
         fp16=True,  # fp16を使用
-        logging_strategy="epoch",  # 各エポックごとにログを保存（デフォルトは"steps"）
-        save_strategy="epoch",  # 各エポックごとにチェックポイントを保存（デフォルトは"steps"）
-        num_train_epochs=3,  # 学習するエポック数
-        per_device_train_batch_size=1,  # （GPUごと）一度に処理するバッチサイズ
-        gradient_accumulation_steps=4,  # 勾配を蓄積するステップ数
+        logging_strategy="epoch",
+        save_strategy="epoch",
+        num_train_epochs=train_epoch,
+        per_device_train_batch_size=per_device_train_batch_size,
+        gradient_accumulation_steps=gradient_accumulation_steps,
         optim="paged_adamw_32bit",  # 最適化アルゴリズム
-        learning_rate=5e-4,  # 初期学習率
-        lr_scheduler_type="cosine",  # 学習率スケジューラの種別
-        max_grad_norm=0.3,  # 勾配の最大ノルムを制限（クリッピング）
-        warmup_ratio=0.03,  # 学習を増加させるウォームアップ期間の比率
+        learning_rate=learning_rate,
+        lr_scheduler_type="cosine",  # WarmupCosineLR
+        max_grad_norm=max_grad_norm,
+        warmup_ratio=warmup_step_rate,
         weight_decay=0.001,  # 重み減衰率
         group_by_length=True,  # シーケンスの長さが近いものをまとめてバッチ化
-        report_to="tensorboard",  # TensorBoard使用してログを生成（"./train_logs"に保存）
+        report_to="wandb",
     )
 
-    # SFTパラメータの設定
     trainer = SFTTrainer(
-        model=model,  # モデルをセット
-        tokenizer=tokenizer,  # トークナイザーをセット
-        train_dataset=dataset,  # データセットをセット
-        dataset_text_field="text",  # 学習に使用するデータセットのフィールド
-        peft_config=lora_config,  # LoRAのConfigをセット
-        args=training_arguments,  # 学習パラメータをセット
-        max_seq_length=8192,  # 入力シーケンスの最大長を設定
+        model=model,
+        tokenizer=tokenizer,
+        train_dataset=dataset,
+        dataset_text_field="text",
+        peft_config=lora_config,
+        args=training_arguments,
+        max_seq_length=max_seq_length,
     )
 
-    # 正規化層をfloat32に変換(学習を安定させるため)
-    for name, module in trainer.model.named_modules():
-        if "norm" in name:
-            module = module.to(torch.float32)
-
-    # モデルの学習
     trainer.train()
+    trainer.model.save_pretrained(save_dir.format(date=today))
 
-    # 学習したアダプターを保存
-    trainer.model.save_pretrained("./ずんだもん_Adapter")
+    wandb.finish()
+
+
+if __json__ == "__main__":
+    fine_tuning()
