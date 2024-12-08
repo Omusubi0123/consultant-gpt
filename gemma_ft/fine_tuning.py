@@ -79,10 +79,19 @@ def fine_tuning(
 
     print("Load dataset")
     dataset = load_dataset(dataset_path)
+    print("Dataset size: ", len(dataset))
+    print("Dataset example: ", dataset[0])
 
     print("Load model")
     model, tokenizer = load_model(repo_id)
     lora_config = set_lora_config()
+
+    def tokenize_function(examples):
+        return tokenizer(examples["text"], padding="max_length", truncation=True)
+
+    tokenized_datasets = dataset.map(tokenize_function, batched=True)
+    tokenized_datasets = tokenized_datasets.remove_columns(["text"])
+    print("Tokenized dataset example: ", tokenized_datasets[0])
 
     today = date.today().strftime("%Y%m%d")
 
@@ -111,8 +120,8 @@ def fine_tuning(
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
-        train_dataset=dataset,
-        dataset_text_field="text",
+        train_dataset=tokenized_datasets,
+        dataset_text_field="input_ids",
         peft_config=lora_config,
         args=training_arguments,
         max_seq_length=max_seq_length,

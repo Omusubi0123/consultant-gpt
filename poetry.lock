@@ -652,6 +652,17 @@ files = [
 six = ">=1.4.0"
 
 [[package]]
+name = "docstring-parser"
+version = "0.16"
+description = "Parse Python docstrings in reST, Google and Numpydoc format"
+optional = false
+python-versions = ">=3.6,<4.0"
+files = [
+    {file = "docstring_parser-0.16-py3-none-any.whl", hash = "sha256:bf0a1387354d3691d102edef7ec124f219ef639982d096e26e3b60aeffa90637"},
+    {file = "docstring_parser-0.16.tar.gz", hash = "sha256:538beabd0af1e2db0146b6bd3caa526c35a34d61af9fd2887f3a8a27a739aa6e"},
+]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.2.2"
 description = "Backport of PEP 654 (exception groups)"
@@ -1378,6 +1389,67 @@ files = [
     {file = "numpy-1.26.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:186ba67fad3c60dbe8a3abff3b67a91351100f2661c8e2a80364ae6279720299"},
     {file = "numpy-1.26.0.tar.gz", hash = "sha256:f93fc78fe8bf15afe2b8d6b6499f1c73953169fad1e9a8dd086cdff3190e7fdf"},
 ]
+
+[[package]]
+name = "nvidia-cublas-cu11"
+version = "11.10.3.66"
+description = "CUBLAS native runtime libraries"
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "nvidia_cublas_cu11-11.10.3.66-py3-none-manylinux1_x86_64.whl", hash = "sha256:d32e4d75f94ddfb93ea0a5dda08389bcc65d8916a25cb9f37ac89edaeed3bded"},
+    {file = "nvidia_cublas_cu11-11.10.3.66-py3-none-win_amd64.whl", hash = "sha256:8ac17ba6ade3ed56ab898a036f9ae0756f1e81052a317bf98f8c6d18dc3ae49e"},
+]
+
+[package.dependencies]
+setuptools = "*"
+wheel = "*"
+
+[[package]]
+name = "nvidia-cuda-nvrtc-cu11"
+version = "11.7.99"
+description = "NVRTC native runtime libraries"
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "nvidia_cuda_nvrtc_cu11-11.7.99-2-py3-none-manylinux1_x86_64.whl", hash = "sha256:9f1562822ea264b7e34ed5930567e89242d266448e936b85bc97a3370feabb03"},
+    {file = "nvidia_cuda_nvrtc_cu11-11.7.99-py3-none-manylinux1_x86_64.whl", hash = "sha256:f7d9610d9b7c331fa0da2d1b2858a4a8315e6d49765091d28711c8946e7425e7"},
+    {file = "nvidia_cuda_nvrtc_cu11-11.7.99-py3-none-win_amd64.whl", hash = "sha256:f2effeb1309bdd1b3854fc9b17eaf997808f8b25968ce0c7070945c4265d64a3"},
+]
+
+[package.dependencies]
+setuptools = "*"
+wheel = "*"
+
+[[package]]
+name = "nvidia-cuda-runtime-cu11"
+version = "11.7.99"
+description = "CUDA Runtime native Libraries"
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "nvidia_cuda_runtime_cu11-11.7.99-py3-none-manylinux1_x86_64.whl", hash = "sha256:cc768314ae58d2641f07eac350f40f99dcb35719c4faff4bc458a7cd2b119e31"},
+    {file = "nvidia_cuda_runtime_cu11-11.7.99-py3-none-win_amd64.whl", hash = "sha256:bc77fa59a7679310df9d5c70ab13c4e34c64ae2124dd1efd7e5474b71be125c7"},
+]
+
+[package.dependencies]
+setuptools = "*"
+wheel = "*"
+
+[[package]]
+name = "nvidia-cudnn-cu11"
+version = "8.5.0.96"
+description = "cuDNN runtime libraries"
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "nvidia_cudnn_cu11-8.5.0.96-2-py3-none-manylinux1_x86_64.whl", hash = "sha256:402f40adfc6f418f9dae9ab402e773cfed9beae52333f6d86ae3107a1b9527e7"},
+    {file = "nvidia_cudnn_cu11-8.5.0.96-py3-none-manylinux1_x86_64.whl", hash = "sha256:71f8111eb830879ff2836db3cccf03bbd735df9b0d17cd93761732ac50a8a108"},
+]
+
+[package.dependencies]
+setuptools = "*"
+wheel = "*"
 
 [[package]]
 name = "outcome"
@@ -2726,6 +2798,20 @@ test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=
 type = ["importlib_metadata (>=7.0.2)", "jaraco.develop (>=7.21)", "mypy (>=1.12,<1.14)", "pytest-mypy"]
 
 [[package]]
+name = "shtab"
+version = "1.7.1"
+description = "Automagic shell tab completion for Python CLI applications"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "shtab-1.7.1-py3-none-any.whl", hash = "sha256:32d3d2ff9022d4c77a62492b6ec875527883891e33c6b479ba4d41a51e259983"},
+    {file = "shtab-1.7.1.tar.gz", hash = "sha256:4e4bcb02eeb82ec45920a5d0add92eac9c9b63b2804c9196c1f1fdc2d039243c"},
+]
+
+[package.extras]
+dev = ["pytest (>=6)", "pytest-cov", "pytest-timeout"]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -2971,32 +3057,43 @@ files = [
 
 [[package]]
 name = "torch"
-version = "1.13.1+cu116"
+version = "1.13.1"
 description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "torch-1.13.1+cu116-cp310-cp310-linux_x86_64.whl", hash = "sha256:51d5870cdf05b6208b1c739fe0ba511b977eca37f9507829675596acc11b6ca4"},
-    {file = "torch-1.13.1+cu116-cp310-cp310-win_amd64.whl", hash = "sha256:6d59b73bbd83eee53e7978925168fe068709e1344050fdabf4043695084b2ccc"},
-    {file = "torch-1.13.1+cu116-cp311-cp311-linux_x86_64.whl", hash = "sha256:8cbfbb27f44fcc246d298f3812f3f7963622b4c1f2823670ae549416199f5ef7"},
-    {file = "torch-1.13.1+cu116-cp37-cp37m-linux_x86_64.whl", hash = "sha256:20d7c6e00804b6bea6f69b77240c4fcdf244cce2f6b1ff73beff7c0df6553d9d"},
-    {file = "torch-1.13.1+cu116-cp37-cp37m-win_amd64.whl", hash = "sha256:c2493a30d0c5ff426fad3d60d9d535c24678b45cc4ce1cffca0f1044d408cb96"},
-    {file = "torch-1.13.1+cu116-cp38-cp38-linux_x86_64.whl", hash = "sha256:9338faa0a5a0eb625e17e39729f06fb0a574098d7ab88d856bbda4cb76a0b665"},
-    {file = "torch-1.13.1+cu116-cp38-cp38-win_amd64.whl", hash = "sha256:1c33942d411d4dee25e56755cfd09538f53a497a6f0453d54ce96a5ca341627b"},
-    {file = "torch-1.13.1+cu116-cp39-cp39-linux_x86_64.whl", hash = "sha256:db457a822d736013b6ffe509053001bc918bdd78fe68967b605f53984a9afac5"},
-    {file = "torch-1.13.1+cu116-cp39-cp39-win_amd64.whl", hash = "sha256:80a6b55915ac72c087ab85122289431fde5c5a4c85ca83a38c6d11a7ecbfdb35"},
+    {file = "torch-1.13.1-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:fd12043868a34a8da7d490bf6db66991108b00ffbeecb034228bfcbbd4197143"},
+    {file = "torch-1.13.1-cp310-cp310-manylinux2014_aarch64.whl", hash = "sha256:d9fe785d375f2e26a5d5eba5de91f89e6a3be5d11efb497e76705fdf93fa3c2e"},
+    {file = "torch-1.13.1-cp310-cp310-win_amd64.whl", hash = "sha256:98124598cdff4c287dbf50f53fb455f0c1e3a88022b39648102957f3445e9b76"},
+    {file = "torch-1.13.1-cp310-none-macosx_10_9_x86_64.whl", hash = "sha256:393a6273c832e047581063fb74335ff50b4c566217019cc6ace318cd79eb0566"},
+    {file = "torch-1.13.1-cp310-none-macosx_11_0_arm64.whl", hash = "sha256:0122806b111b949d21fa1a5f9764d1fd2fcc4a47cb7f8ff914204fd4fc752ed5"},
+    {file = "torch-1.13.1-cp311-cp311-manylinux1_x86_64.whl", hash = "sha256:22128502fd8f5b25ac1cd849ecb64a418382ae81dd4ce2b5cebaa09ab15b0d9b"},
+    {file = "torch-1.13.1-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:76024be052b659ac1304ab8475ab03ea0a12124c3e7626282c9c86798ac7bc11"},
+    {file = "torch-1.13.1-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:ea8dda84d796094eb8709df0fcd6b56dc20b58fdd6bc4e8d7109930dafc8e419"},
+    {file = "torch-1.13.1-cp37-cp37m-win_amd64.whl", hash = "sha256:2ee7b81e9c457252bddd7d3da66fb1f619a5d12c24d7074de91c4ddafb832c93"},
+    {file = "torch-1.13.1-cp37-none-macosx_10_9_x86_64.whl", hash = "sha256:0d9b8061048cfb78e675b9d2ea8503bfe30db43d583599ae8626b1263a0c1380"},
+    {file = "torch-1.13.1-cp37-none-macosx_11_0_arm64.whl", hash = "sha256:f402ca80b66e9fbd661ed4287d7553f7f3899d9ab54bf5c67faada1555abde28"},
+    {file = "torch-1.13.1-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:727dbf00e2cf858052364c0e2a496684b9cb5aa01dc8a8bc8bbb7c54502bdcdd"},
+    {file = "torch-1.13.1-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:df8434b0695e9ceb8cc70650afc1310d8ba949e6db2a0525ddd9c3b2b181e5fe"},
+    {file = "torch-1.13.1-cp38-cp38-win_amd64.whl", hash = "sha256:5e1e722a41f52a3f26f0c4fcec227e02c6c42f7c094f32e49d4beef7d1e213ea"},
+    {file = "torch-1.13.1-cp38-none-macosx_10_9_x86_64.whl", hash = "sha256:33e67eea526e0bbb9151263e65417a9ef2d8fa53cbe628e87310060c9dcfa312"},
+    {file = "torch-1.13.1-cp38-none-macosx_11_0_arm64.whl", hash = "sha256:eeeb204d30fd40af6a2d80879b46a7efbe3cf43cdbeb8838dd4f3d126cc90b2b"},
+    {file = "torch-1.13.1-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:50ff5e76d70074f6653d191fe4f6a42fdbe0cf942fbe2a3af0b75eaa414ac038"},
+    {file = "torch-1.13.1-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:2c3581a3fd81eb1f0f22997cddffea569fea53bafa372b2c0471db373b26aafc"},
+    {file = "torch-1.13.1-cp39-cp39-win_amd64.whl", hash = "sha256:0aa46f0ac95050c604bcf9ef71da9f1172e5037fdf2ebe051962d47b123848e7"},
+    {file = "torch-1.13.1-cp39-none-macosx_10_9_x86_64.whl", hash = "sha256:6930791efa8757cb6974af73d4996b6b50c592882a324b8fb0589c6a9ba2ddaf"},
+    {file = "torch-1.13.1-cp39-none-macosx_11_0_arm64.whl", hash = "sha256:e0df902a7c7dd6c795698532ee5970ce898672625635d885eade9976e5a04949"},
 ]
 
 [package.dependencies]
+nvidia-cublas-cu11 = {version = "11.10.3.66", markers = "platform_system == \"Linux\""}
+nvidia-cuda-nvrtc-cu11 = {version = "11.7.99", markers = "platform_system == \"Linux\""}
+nvidia-cuda-runtime-cu11 = {version = "11.7.99", markers = "platform_system == \"Linux\""}
+nvidia-cudnn-cu11 = {version = "8.5.0.96", markers = "platform_system == \"Linux\""}
 typing-extensions = "*"
 
 [package.extras]
 opt-einsum = ["opt-einsum (>=3.3)"]
-
-[package.source]
-type = "legacy"
-url = "https://download.pytorch.org/whl/cu116"
-reference = "torch-cu116"
 
 [[package]]
 name = "tornado"
@@ -3161,32 +3258,54 @@ wsproto = ">=0.14"
 
 [[package]]
 name = "trl"
-version = "0.12.2"
+version = "0.11.3"
 description = "Train transformer language models with reinforcement learning."
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.7"
 files = [
-    {file = "trl-0.12.2-py3-none-any.whl", hash = "sha256:2673838f199cc8b13f58f5e2f4bfdc95aa959e0e14a8c827dce71275954afaee"},
-    {file = "trl-0.12.2.tar.gz", hash = "sha256:bfe8c7d16c8bc0a82a81cc92439286a7857c1a55bb51d1f5b2f210e1897fc9fa"},
+    {file = "trl-0.11.3-py3-none-any.whl", hash = "sha256:6381870f03b510837fc09b933914a6c32d4081a95505bd6828a77d7a833dbe83"},
+    {file = "trl-0.11.3.tar.gz", hash = "sha256:8c03816cd40ec4700c95abccfc84e6fb9857643c956ab2907ad531a401b26fab"},
 ]
 
 [package.dependencies]
-accelerate = ">=0.34.0"
-datasets = ">=2.21.0"
-rich = "*"
-transformers = "<4.47.0"
+accelerate = "*"
+datasets = "*"
+numpy = [
+    {version = ">=1.18.2", markers = "platform_system != \"Windows\""},
+    {version = "<2", markers = "platform_system == \"Windows\""},
+]
+torch = ">=1.4.0"
+transformers = ">=4.40.0"
+tyro = ">=0.5.11"
 
 [package.extras]
+benchmark = ["deepspeed", "ghapi", "openrlbenchmark (==0.2.1a5)", "requests", "wandb"]
 deepspeed = ["deepspeed (>=0.14.4)"]
-dev = ["Pillow", "Pillow", "bitsandbytes", "bitsandbytes", "deepspeed (>=0.14.4)", "deepspeed (>=0.14.4)", "diffusers (>=0.18.0)", "diffusers (>=0.18.0)", "liger-kernel (>=0.2.1)", "liger-kernel (>=0.2.1)", "llm-blender (>=0.0.2)", "llm-blender (>=0.0.2)", "openai (>=1.23.2)", "openai (>=1.23.2)", "parameterized", "parameterized", "peft (>=0.8.0)", "peft (>=0.8.0)", "pytest", "pytest", "pytest-cov", "pytest-cov", "pytest-rerunfailures", "pytest-rerunfailures", "pytest-xdist", "pytest-xdist", "scikit-learn", "scikit-learn"]
+dev = ["Pillow", "bitsandbytes (<=0.41.1)", "deepspeed", "deepspeed (>=0.14.4)", "diffusers (>=0.18.0)", "ghapi", "huggingface-hub (>=0.22.2)", "liger-kernel (>=0.2.1)", "llm-blender (>=0.0.2)", "openai (>=1.23.2)", "openrlbenchmark (==0.2.1a5)", "parameterized", "peft (>=0.8.0)", "pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist", "requests", "scikit-learn", "wandb"]
 diffusers = ["diffusers (>=0.18.0)"]
 liger = ["liger-kernel (>=0.2.1)"]
-llm-judge = ["llm-blender (>=0.0.2)", "openai (>=1.23.2)"]
+llm-judge = ["huggingface-hub (>=0.22.2)", "llm-blender (>=0.0.2)", "openai (>=1.23.2)"]
 peft = ["peft (>=0.8.0)"]
-quantization = ["bitsandbytes"]
-scikit = ["scikit-learn"]
-test = ["parameterized", "pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist"]
-vlm = ["Pillow"]
+quantization = ["bitsandbytes (<=0.41.1)"]
+test = ["Pillow", "llm-blender (>=0.0.2)", "parameterized", "peft (>=0.8.0)", "pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist", "scikit-learn"]
+
+[[package]]
+name = "typeguard"
+version = "4.4.1"
+description = "Run-time type checker for Python"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "typeguard-4.4.1-py3-none-any.whl", hash = "sha256:9324ec07a27ec67fc54a9c063020ca4c0ae6abad5e9f0f9804ca59aee68c6e21"},
+    {file = "typeguard-4.4.1.tar.gz", hash = "sha256:0d22a89d00b453b47c49875f42b6601b961757541a2e1e0ef517b6e24213c21b"},
+]
+
+[package.dependencies]
+typing-extensions = ">=4.10.0"
+
+[package.extras]
+doc = ["Sphinx (>=7)", "packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme (>=1.3.0)"]
+test = ["coverage[toml] (>=7)", "mypy (>=1.2.0)", "pytest (>=7)"]
 
 [[package]]
 name = "typing-extensions"
@@ -3198,6 +3317,28 @@ files = [
     {file = "typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d"},
     {file = "typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8"},
 ]
+
+[[package]]
+name = "tyro"
+version = "0.9.2"
+description = "CLI interfaces & config objects, from types"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tyro-0.9.2-py3-none-any.whl", hash = "sha256:f7c301b30b1ac7b18672f234e45013786c494d64c0e3621b25b8414637af8f90"},
+    {file = "tyro-0.9.2.tar.gz", hash = "sha256:692687e07c1ed35cc3a841e8c4a188424023f16bdef37f2d9c23cbeb8a3b51aa"},
+]
+
+[package.dependencies]
+colorama = {version = ">=0.4.0", markers = "platform_system == \"Windows\""}
+docstring-parser = ">=0.16"
+rich = ">=11.1.0"
+shtab = ">=1.5.6"
+typeguard = ">=4.0.0"
+typing-extensions = {version = ">=4.9.0", markers = "python_version >= \"3.8\""}
+
+[package.extras]
+dev = ["attrs (>=21.4.0)", "coverage[toml] (>=6.5.0)", "eval-type-backport (>=0.1.3)", "flax (>=0.6.9)", "frozendict (>=2.3.4)", "mypy (>=1.4.1)", "numpy (>=1.20.0)", "omegaconf (>=2.2.2)", "pydantic (>=2.5.2,!=2.10.0)", "pyright (>=1.1.349,!=1.1.379)", "pytest (>=7.1.2)", "pytest-cov (>=3.0.0)", "pyyaml (>=6.0)", "ruff (>=0.1.13)", "torch (>=1.10.0)"]
 
 [[package]]
 name = "tzdata"
@@ -3303,6 +3444,20 @@ files = [
 docs = ["Sphinx (>=6.0)", "myst-parser (>=2.0.0)", "sphinx-rtd-theme (>=1.1.0)"]
 optional = ["python-socks", "wsaccel"]
 test = ["websockets"]
+
+[[package]]
+name = "wheel"
+version = "0.45.1"
+description = "A built-package format for Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "wheel-0.45.1-py3-none-any.whl", hash = "sha256:708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248"},
+    {file = "wheel-0.45.1.tar.gz", hash = "sha256:661e1abd9198507b1409a20c02106d9670b2576e916d58f520316666abca6729"},
+]
+
+[package.extras]
+test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
 
 [[package]]
 name = "wsproto"
@@ -3549,4 +3704,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "26f5c668a7aa62ebf3a6977b9b891d0f56950399f6ad831721fdeffc3df26cd1"
+content-hash = "171fa08bebd02d0c95d902a3ff1b1fe714dd9aeb51ca57cb1aa273383e47266f"
