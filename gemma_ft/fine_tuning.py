@@ -14,10 +14,10 @@ from gemma_ft.jsonl_dataset import JSONLDataset
 from scraping.g_category_info import category_dict
 
 
-def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl") -> Dataset:
+def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl", batch_size: int = 16) -> Dataset:
     category_datasets = []
     for category in category_dict.keys():
-        dataset = JSONLDataset(path.format(category=category))
+        dataset = JSONLDataset(path.format(category=category), batch_size)
         dataset = dataset.map(format_qa_to_prompt)
         category_datasets.append(dataset)
 
@@ -78,7 +78,7 @@ def fine_tuning(
     print(f"device: {torch.cuda.is_available()}")
 
     print("Load dataset")
-    dataset = load_dataset(dataset_path)
+    dataset = load_dataset(dataset_path, per_device_train_batch_size)
     print("Dataset size: ", len(dataset))
     print("Dataset example: ", dataset[0])
 
