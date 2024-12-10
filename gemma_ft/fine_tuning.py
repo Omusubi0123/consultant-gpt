@@ -1,11 +1,17 @@
 import os
 from datetime import date
 
+import bitsandbytes as bnb
 import torch
 from datasets import Dataset
 from dotenv import load_dotenv
 from peft import LoraConfig
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    TrainingArguments,
+)
 from trl import SFTTrainer
 
 import wandb
@@ -26,13 +32,51 @@ def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl") -> Dataset:
     return dataset
 
 
+def set_quantization_config():
+    quantization_config = BitsAndBytesConfig(
+        load_in_4bit=True,  # 4ビット量子化を使用
+        bnb_4bit_quant_type="nf4",  # 4ビット量子化の種類にnf4（NormalFloat4）を使用
+        bnb_4bit_use_double_quant=True,  # 二重量子化を使用
+        bnb_4bit_compute_dtype=torch.float16,  # 量子化のデータ型をfloat16に設定
+    )
+    return quantization_config
+
+
+def set_lora_config(target_modules):
+    Lora_config = LoraConfig(
+        lora_alpha=8,  # LoRAによる学習の影響力を調整（スケーリング)
+        lora_dropout=0.1,  # ドロップアウト率
+        r=4,  # 低ランク行列の次元数
+        bias="none",  # バイアスのパラメータ更新
+        task_type="CAUSAL_LM",  # タスクの種別
+        target_modules=target_modules,  # 量子化対象のモジュール
+    )
+    return Lora_config
+
+
+def find_all_linear_names(model):
+    # モデルから4ビット量子化された線形層の名前を取得する関数
+    target_class = bnb.nn.Linear4bit
+    linear_layer_names = set()
+    for name_list, module in model.named_modules():
+        if isinstance(module, target_class):
+            names = name_list.split(".")
+            layer_name = names[-1] if len(names) > 1 else names[0]
+            linear_layer_names.add(layer_name)
+    if "lm_head" in linear_layer_names:
+        linear_layer_names.remove("lm_head")
+    return list(linear_layer_names)
+
+
 def load_model(repo_id: str = "google/gemma-2-2b-jpn-it") -> tuple:
+    quantization_config = set_quantization_config()
+
     model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=repo_id,
-        # device_map={"": "cuda"},
-        device_map="auto",
+        device_map={"": "cuda"},
         torch_dtype=torch.float16,
         attn_implementation="eager",
+        quantization_config=quantization_config,
         token=os.environ["HF_TOKEN"],
     )
     model.config.use_cache = False
@@ -51,15 +95,11 @@ def load_model(repo_id: str = "google/gemma-2-2b-jpn-it") -> tuple:
     return model, tokenizer
 
 
-def set_lora_config():
-    Lora_config = LoraConfig(
-        lora_alpha=8,  # LoRAによる学習の影響力を調整（スケーリング)
-        lora_dropout=0.1,  # ドロップアウト率
-        r=4,  # 低ランク行列の次元数
-        bias="none",  # バイアスのパラメータ更新
-        task_type="CAUSAL_LM",  # タスクの種別
-    )
-    return Lora_config
+def set_normlayer_float32(trainer):
+    for name, module in trainer.model.named_modules():
+        if "norm" in name:
+            module = module.to(torch.float32)
+    return trainer
 
 
 def fine_tuning(
@@ -68,7 +108,7 @@ def fine_tuning(
     save_dir: str = "./model/gemma-ft-{date}",
     output_dir: str = "./model/gemma-ft-log-{date}",
     train_epoch: int = 4,
-    per_device_train_batch_size: int = 16,
+    per_device_train_batch_size: int = 4,
     gradient_accumulation_steps: int = 8,
     max_grad_norm: float = 0.3,
     warmup_step_rate: float = 0.03,
@@ -85,7 +125,9 @@ def fine_tuning(
 
     print("Load model")
     model, tokenizer = load_model(repo_id)
-    lora_config = set_lora_config()
+
+    lora_target_modules = find_all_linear_names(model)
+    lora_config = set_lora_config(lora_target_modules)
 
     today = date.today().strftime("%Y%m%d")
 
@@ -120,6 +162,8 @@ def fine_tuning(
         args=training_arguments,
         max_seq_length=max_seq_length,
     )
+
+    trainer = set_normlayer_float32(trainer)
 
     trainer.train()
     trainer.model.save_pretrained(save_dir.format(date=today))
