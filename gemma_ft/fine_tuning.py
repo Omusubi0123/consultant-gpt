@@ -113,7 +113,7 @@ def fine_tuning(
     save_dir: str = "./model/gemma-ft-{date}",
     output_dir: str = "./model/gemma-ft-log-{date}",
     train_epoch: int = 4,
-    per_device_train_batch_size: int = 16,
+    per_device_train_batch_size: int = 8,
     gradient_accumulation_steps: int = 32,
     max_grad_norm: float = 0.3,
     warmup_step_rate: float = 0.03,
