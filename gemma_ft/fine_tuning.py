@@ -14,18 +14,22 @@ from gemma_ft.jsonl_dataset import JSONLDataset
 from scraping.g_category_info import category_dict
 
 
-def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl", batch_size: int = 16) -> Dataset:
+def load_dataset(
+    path: str = "./data/goo_q_n_a/{category}.jsonl", batch_size: int = 16
+) -> Dataset:
     category_datasets = []
     for category in category_dict.keys():
         dataset = JSONLDataset(path.format(category=category), batch_size)
         dataset = dataset.map(format_qa_to_prompt)
         category_datasets.append(dataset)
 
-    dataset = JSONLDataset.combine(*category_datasets)
+    dataset = JSONLDataset.combine(*category_datasets, batch_size=batch_size)
     return dataset
 
 
-def load_model(repo_id: str = "google/gemma-2-2b-jpn-it") -> tuple:
+def load_model(
+    repo_id: str = "google/gemma-2-2b-jpn-it", max_seq_length: int = 8192
+) -> tuple:
     model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=repo_id,
         # device_map={"": "cuda"},
@@ -36,6 +40,8 @@ def load_model(repo_id: str = "google/gemma-2-2b-jpn-it") -> tuple:
     )
     model.config.use_cache = False
     model.config.pretraining_tp = 1
+    model.max_seq_length = max_seq_length
+    model.config.max_position_embeddings = max_seq_length
 
     tokenizer = AutoTokenizer.from_pretrained(
         pretrained_model_name_or_path=repo_id,
@@ -83,15 +89,25 @@ def fine_tuning(
     print("Dataset example: ", dataset[0])
 
     print("Load model")
-    model, tokenizer = load_model(repo_id)
+    model, tokenizer = load_model(repo_id, max_seq_length)
     lora_config = set_lora_config()
 
     def tokenize_function(examples):
-        return tokenizer(examples["text"], padding="max_length", truncation=True)
+        texts = [example["text"] for example in examples]
+        tokenized = tokenizer(
+            texts, padding="max_length", truncation=True, max_seq_length=max_seq_length
+        )
+        return [
+            {
+                "input_ids": tokenized["input_ids"][i],
+                "attention_mask": tokenized["attention_mask"][i],
+                "labels": tokenized["input_ids"][i],
+            }
+            for i in range(len(texts))
+        ]
 
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
-    tokenized_datasets = tokenized_datasets.remove_columns(["text"])
-    print("Tokenized dataset example: ", tokenized_datasets[0])
+    print("Tokenized dataset example: ", tokenized_datasets[:5])
 
     today = date.today().strftime("%Y%m%d")
 

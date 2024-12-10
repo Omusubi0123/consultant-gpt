@@ -18,15 +18,22 @@ class JSONLDataset(Dataset):
 
     def map(self, function, batched=False):
         if batched:
-            batched_data = [self.data[i:i + self.batch_size] for i in range(0, len(self.data), self.batch_size)]
-            self.data = [function(batch) for batch in batched_data]
+            batched_data = [
+                self.data[i : i + self.batch_size]
+                for i in range(0, len(self.data), self.batch_size)
+            ]
+            self.data = []
+            for batch in batched_data:
+                result = function(batch)
+                self.data.extend(result)
         else:
             self.data = [function(data) for data in self.data]
         return self
 
     @classmethod
-    def combine(cls, *datasets):
+    def combine(cls, *datasets, batch_size: int):
         combined = cls.__new__(cls)
+        combined.batch_size = batch_size
         combined.data = []
         for dataset in datasets:
             combined.data.extend(dataset.data)

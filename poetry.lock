@@ -243,6 +243,26 @@ html5lib = ["html5lib"]
 lxml = ["lxml"]
 
 [[package]]
+name = "bitsandbytes"
+version = "0.45.0"
+description = "k-bit optimizers and matrix multiplication routines."
+optional = false
+python-versions = "*"
+files = [
+    {file = "bitsandbytes-0.45.0-py3-none-manylinux_2_24_x86_64.whl", hash = "sha256:0f0323de1ff1fdf8383e79bdad1283516a4c05a6fd2b44a363bf4e059422305b"},
+    {file = "bitsandbytes-0.45.0-py3-none-win_amd64.whl", hash = "sha256:ebbf96e0ecb466716a65ecdeaef3fa1983575447b9ab66b74e5211892507c6ff"},
+]
+
+[package.dependencies]
+numpy = "*"
+torch = "*"
+typing_extensions = ">=4.8.0"
+
+[package.extras]
+benchmark = ["matplotlib", "pandas"]
+test = ["lion_pytorch", "scipy"]
+
+[[package]]
 name = "black"
 version = "23.12.1"
 description = "The uncompromising code formatter."
@@ -3704,4 +3724,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "171fa08bebd02d0c95d902a3ff1b1fe714dd9aeb51ca57cb1aa273383e47266f"
+content-hash = "499b3827a53d5071063ca92837daed52102e8505d1f0f6818df0321a9e1ad367"
