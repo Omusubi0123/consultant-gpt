@@ -14,22 +14,19 @@ from gemma_ft.jsonl_dataset import JSONLDataset
 from scraping.g_category_info import category_dict
 
 
-def load_dataset(
-    path: str = "./data/goo_q_n_a/{category}.jsonl", batch_size: int = 16
-) -> Dataset:
+def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl") -> Dataset:
     category_datasets = []
     for category in category_dict.keys():
-        dataset = JSONLDataset(path.format(category=category), batch_size)
+        dataset = JSONLDataset(path.format(category=category))
         dataset = dataset.map(format_qa_to_prompt)
         category_datasets.append(dataset)
 
-    dataset = JSONLDataset.combine(*category_datasets, batch_size=batch_size)
+    dataset = JSONLDataset.combine(*category_datasets)
+    dataset = Dataset.from_list([{"text": data["text"]} for data in dataset])
     return dataset
 
 
-def load_model(
-    repo_id: str = "google/gemma-2-2b-jpn-it", max_seq_length: int = 8192
-) -> tuple:
+def load_model(repo_id: str = "google/gemma-2-2b-jpn-it") -> tuple:
     model = AutoModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=repo_id,
         # device_map={"": "cuda"},
@@ -40,8 +37,6 @@ def load_model(
     )
     model.config.use_cache = False
     model.config.pretraining_tp = 1
-    model.max_seq_length = max_seq_length
-    model.config.max_position_embeddings = max_seq_length
 
     tokenizer = AutoTokenizer.from_pretrained(
         pretrained_model_name_or_path=repo_id,
@@ -84,30 +79,13 @@ def fine_tuning(
     print(f"device: {torch.cuda.is_available()}")
 
     print("Load dataset")
-    dataset = load_dataset(dataset_path, per_device_train_batch_size)
+    dataset = load_dataset(dataset_path)
     print("Dataset size: ", len(dataset))
     print("Dataset example: ", dataset[0])
 
     print("Load model")
-    model, tokenizer = load_model(repo_id, max_seq_length)
+    model, tokenizer = load_model(repo_id)
     lora_config = set_lora_config()
-
-    def tokenize_function(examples):
-        texts = [example["text"] for example in examples]
-        tokenized = tokenizer(
-            texts, padding="max_length", truncation=True, max_seq_length=max_seq_length
-        )
-        return [
-            {
-                "input_ids": tokenized["input_ids"][i],
-                "attention_mask": tokenized["attention_mask"][i],
-                "labels": tokenized["input_ids"][i],
-            }
-            for i in range(len(texts))
-        ]
-
-    tokenized_datasets = dataset.map(tokenize_function, batched=True)
-    print("Tokenized dataset example: ", tokenized_datasets[:5])
 
     today = date.today().strftime("%Y%m%d")
 
@@ -136,8 +114,8 @@ def fine_tuning(
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
-        train_dataset=tokenized_datasets,
-        dataset_text_field="input_ids",
+        train_dataset=dataset,
+        dataset_text_field="text",
         peft_config=lora_config,
         args=training_arguments,
         max_seq_length=max_seq_length,
