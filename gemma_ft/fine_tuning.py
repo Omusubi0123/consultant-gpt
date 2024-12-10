@@ -21,6 +21,7 @@ from scraping.g_category_info import category_dict
 
 
 def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl") -> Dataset:
+    # データセットをロード
     category_datasets = []
     for category in category_dict.keys():
         dataset = JSONLDataset(path.format(category=category))
@@ -33,6 +34,7 @@ def load_dataset(path: str = "./data/goo_q_n_a/{category}.jsonl") -> Dataset:
 
 
 def set_quantization_config():
+    # モデル量子化の設定
     quantization_config = BitsAndBytesConfig(
         load_in_4bit=True,  # 4ビット量子化を使用
         bnb_4bit_quant_type="nf4",  # 4ビット量子化の種類にnf4（NormalFloat4）を使用
@@ -43,6 +45,7 @@ def set_quantization_config():
 
 
 def set_lora_config(target_modules):
+    # LoRAの設定
     Lora_config = LoraConfig(
         lora_alpha=8,  # LoRAによる学習の影響力を調整（スケーリング)
         lora_dropout=0.1,  # ドロップアウト率
@@ -55,7 +58,7 @@ def set_lora_config(target_modules):
 
 
 def find_all_linear_names(model):
-    # モデルから4ビット量子化された線形層の名前を取得する関数
+    # モデルから4ビット量子化された線形層の名前を取得
     target_class = bnb.nn.Linear4bit
     linear_layer_names = set()
     for name_list, module in model.named_modules():
@@ -69,6 +72,7 @@ def find_all_linear_names(model):
 
 
 def load_model(repo_id: str = "google/gemma-2-2b-jpn-it") -> tuple:
+    # モデルとトークナイザーをロード
     quantization_config = set_quantization_config()
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -96,6 +100,7 @@ def load_model(repo_id: str = "google/gemma-2-2b-jpn-it") -> tuple:
 
 
 def set_normlayer_float32(trainer):
+    # 正規化層をfloat32に変換(学習を安定させるため)
     for name, module in trainer.model.named_modules():
         if "norm" in name:
             module = module.to(torch.float32)
@@ -108,8 +113,8 @@ def fine_tuning(
     save_dir: str = "./model/gemma-ft-{date}",
     output_dir: str = "./model/gemma-ft-log-{date}",
     train_epoch: int = 4,
-    per_device_train_batch_size: int = 4,
-    gradient_accumulation_steps: int = 8,
+    per_device_train_batch_size: int = 16,
+    gradient_accumulation_steps: int = 32,
     max_grad_norm: float = 0.3,
     warmup_step_rate: float = 0.03,
     learning_rate: float = 5e-5,
@@ -175,4 +180,10 @@ if __name__ == "__main__":
     load_dotenv()
     os.environ["HF_TOKEN"] = os.getenv("HF_TOKEN")
     os.environ["WANDB_API_KEY"] = os.getenv("WANDB_API_KEY")
+
+    torch.cuda.empty_cache()
+    os.environ[
+        "PYTORCH_CUDA_ALLOC_CONF"
+    ] = "garbage_collection_threshold:0.8,max_split_size_mb:64"
+
     fine_tuning()
