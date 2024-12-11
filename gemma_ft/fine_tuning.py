@@ -163,9 +163,12 @@ def fine_tuning(
     training_arguments = TrainingArguments(
         output_dir=output_dir.format(date=today, max_seq_length=max_seq_length),
         fp16=True,  # fp16を使用
-        save_strategy=100,
         eval_strategy="steps",
+        eval_steps=100,
         logging_strategy="steps",
+        logging_steps=100,
+        save_strategy="steps",
+        save_steps=100,
         num_train_epochs=train_epoch,
         per_device_train_batch_size=per_device_train_batch_size,
         gradient_accumulation_steps=gradient_accumulation_steps,
