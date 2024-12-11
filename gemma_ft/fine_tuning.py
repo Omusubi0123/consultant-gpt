@@ -107,14 +107,27 @@ def set_normlayer_float32(trainer):
     return trainer
 
 
+def print_train_statusy(args: TrainingArguments):
+    """deepspeedの"auto"設定の結果、batch_sizeなどがいくつで実行されたか確認"""
+    print("------------------------------")
+    print(f"Train Batch Size: {args.train_batch_size}")
+    print(f"Per Device Train Batch Size: {args.per_device_train_batch_size}")
+    if torch.cuda.is_available():
+        print(f"GPU memory allocated: {torch.cuda.memory_allocated() / 1e9:.2f} GB")
+        print(f"GPU memory reserved: {torch.cuda.memory_reserved() / 1e9:.2f} GB")
+    else:
+        print("Running on CPU")
+    print("------------------------------")
+
+
 def fine_tuning(
     repo_id: str = "google/gemma-2-2b-jpn-it",
     dataset_path: str = "./data/goo_q_n_a/{category}.jsonl",
     save_dir: str = "./model/gemma-ft-{date}",
-    output_dir: str = "./model/gemma-ft-log-{date}",
+    output_dir: str = "./model/gemma-ft-log-{date}-{max_seq_length}",
     train_epoch: int = 4,
     per_device_train_batch_size: int = 8,
-    gradient_accumulation_steps: int = 32,
+    gradient_accumulation_steps: int = 64,
     max_grad_norm: float = 0.3,
     warmup_step_rate: float = 0.03,
     learning_rate: float = 5e-5,
@@ -136,15 +149,23 @@ def fine_tuning(
 
     today = date.today().strftime("%Y%m%d")
 
-    print("Set wandb project: ", wandb_project)
-    wandb.init(project=wandb_project)
+    substantial_batch_size = (
+        per_device_train_batch_size
+        * torch.cuda.device_count()
+        * gradient_accumulation_steps
+    )
+    wandb.init(
+        project=wandb_project,
+        name=f"gemma-ft-{today}-{max_seq_length}-{substantial_batch_size}-{train_epoch}-{learning_rate}",
+    )
 
     print("Start fine-tuning")
     training_arguments = TrainingArguments(
-        output_dir=output_dir.format(date=today),
+        output_dir=output_dir.format(date=today, max_seq_length=max_seq_length),
         fp16=True,  # fp16を使用
-        logging_strategy="epoch",
-        save_strategy="epoch",
+        save_strategy=100,
+        eval_strategy="steps",
+        logging_strategy="steps",
         num_train_epochs=train_epoch,
         per_device_train_batch_size=per_device_train_batch_size,
         gradient_accumulation_steps=gradient_accumulation_steps,
@@ -169,6 +190,8 @@ def fine_tuning(
     )
 
     trainer = set_normlayer_float32(trainer)
+
+    print_train_statusy(training_arguments)
 
     trainer.train()
     trainer.model.save_pretrained(save_dir.format(date=today))
