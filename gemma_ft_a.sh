@@ -1,13 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH -p a
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:1
 #SBATCH --mem=64G
 
+source ~/.bashrc
+. ~/miniconda3/etc/profile.d/conda.sh
 conda activate consultant-gpt
 
 export LD_LIBRARY_PATH=$HOME/.local/lib:$LD_LIBRARY_PATH
 export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
 
-python3 -m pip list
+# python3 -m pip list
+conda list
 
-python3 gemma_ft/fine_tuning.py
+python gemma_ft/fine_tuning.py

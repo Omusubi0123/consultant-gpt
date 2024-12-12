@@ -126,22 +126,26 @@ def fine_tuning(
     save_dir: str = "./model/gemma-ft-{date}",
     output_dir: str = "./model/gemma-ft-log-{date}-{max_seq_length}",
     train_epoch: int = 4,
-    per_device_train_batch_size: int = 8,
-    gradient_accumulation_steps: int = 64,
+    per_device_train_batch_size: int = 2,
+    gradient_accumulation_steps: int = 128,
     max_grad_norm: float = 0.3,
     warmup_step_rate: float = 0.03,
     learning_rate: float = 5e-5,
-    max_seq_length: int = 8192,
+    max_seq_length: int = 2048,
     wandb_project: str = "gemma-fine-tuning",
 ):
     print(f"device: {torch.cuda.is_available()}")
 
-    print("Load dataset")
     dataset = load_dataset(dataset_path)
-    print("Dataset size: ", len(dataset))
-    print("Dataset example: ", dataset[0])
+    train_val_dataset = dataset.train_test_split(test_size=0.1, seed=42)
+    train_dataset = train_val_dataset["train"]
+    val_dataset = train_val_dataset["test"]
 
-    print("Load model")
+    # debug
+    print("Dataset size: ", len(dataset))
+    print("Train dataset size: ", len(train_dataset))
+    print("Validation dataset size: ", len(val_dataset))
+
     model, tokenizer = load_model(repo_id)
 
     lora_target_modules = find_all_linear_names(model)
@@ -186,6 +190,7 @@ def fine_tuning(
         model=model,
         tokenizer=tokenizer,
         train_dataset=dataset,
+        eval_dataset=val_dataset,
         dataset_text_field="text",
         peft_config=lora_config,
         args=training_arguments,
