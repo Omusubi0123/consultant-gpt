@@ -3,7 +3,6 @@ from datetime import date
 
 import bitsandbytes as bnb
 import torch
-import wandb
 from datasets import Dataset
 from dotenv import load_dotenv
 from peft import LoraConfig
@@ -15,6 +14,7 @@ from transformers import (
 )
 from trl import SFTTrainer
 
+import wandb
 from gemma_ft.gemma_format import format_qa_to_prompt
 from gemma_ft.jsonl_dataset import JSONLDataset
 from scraping.g_category_info import category_dict
