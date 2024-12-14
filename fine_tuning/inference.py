@@ -51,16 +51,18 @@ def llm_response(model, tokenizer, messages) -> str:
     return response
 
 
-def inference_gemma():
-    model, tokenizer = load_model()
+def inference_gemma(
+    lora_model_path: str = "./model/gemma-ft-{date}",
+    model_ft_date: str = "mmdd",
+):
+    model, tokenizer = load_model(
+        lora_model_path=lora_model_path.format(date=model_ft_date)
+    )
 
     while True:
         question = input("Q: ")
-
         messages = [{"role": "user", "content": question}]
-
         response = llm_response(model, tokenizer, messages)
-
         print(f"A: {response}")
 
 
