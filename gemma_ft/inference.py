@@ -1,11 +1,13 @@
 import os
+import sys
+import threading
 
 import torch
 import torch.backends
 from dotenv import load_dotenv
 from fire import Fire
 from peft import AutoPeftModelForCausalLM
-from transformers import AutoTokenizer, pipeline
+from transformers import AutoTokenizer, TextIteratorStreamer
 
 
 def load_model(
@@ -15,8 +17,7 @@ def load_model(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = AutoPeftModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=lora_model_path,
-        device_map="auto",
-        # torch_dtype=torch.float16,
+        device_map="cpu",
     )
 
     tokenizer = AutoTokenizer.from_pretrained(
@@ -30,22 +31,40 @@ def load_model(
     return model, tokenizer
 
 
-def llm_response(pipe, question) -> str:
-    print("A: ", end="", flush=True)
+def llm_response(model, tokenizer, question) -> str:
+    streamer = TextIteratorStreamer(
+        tokenizer, skip_prompt=True, skip_special_tokens=True
+    )
 
-    response = ""
-    for chunk in pipe(
-        question,
+    inputs = tokenizer(question, return_tensors="pt").to(model.device)
+
+    generation_kwargs = dict(
+        inputs,
+        streamer=streamer,
         max_new_tokens=1000,
         do_sample=True,
         temperature=0.9,
         top_p=0.9,
-    ):
-        print(chunk["generated_text"], end="", flush=True)
-        response += chunk["generated_text"]
+    )
+
+    print("A: ", end="", flush=True)
+    generation_thread = threading.Thread(
+        target=model.generate, kwargs=generation_kwargs
+    )
+    generation_thread.start()
+
+    generated_text = ""
+    try:
+        for new_token in streamer:
+            print(new_token, end="", flush=True)
+            generated_text += new_token
+    except Exception as e:
+        print(f"\nError during streaming: {e}", file=sys.stderr)
+
+    generation_thread.join()
 
     print()
-    return response
+    return generated_text
 
 
 def inference_gemma(
@@ -55,18 +74,18 @@ def inference_gemma(
     model, tokenizer = load_model(
         lora_model_path=lora_model_path.format(date=model_ft_date)
     )
-    pipe = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        device_map={"": model.device},
-        stream=True,
-    )
 
     while True:
-        question = input("Q: ")
-        response = llm_response(pipe, question)
-        print(f"A: {response}")
+        try:
+            question = input("Q: ")
+            if question.lower() in ["exit", "quit", "q"]:
+                break
+
+            response = llm_response(model, tokenizer, question)
+        except KeyboardInterrupt:
+            print("\nInterrupted by user. Type 'exit' to quit.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
