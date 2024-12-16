@@ -9,6 +9,8 @@ from fire import Fire
 from peft import AutoPeftModelForCausalLM
 from transformers import AutoTokenizer, TextIteratorStreamer
 
+from gemma_ft.gemma_format import format_inference_prompt
+
 
 def load_model(
     repo_id: str = "google/gemma-2-2b-it",
@@ -17,7 +19,7 @@ def load_model(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = AutoPeftModelForCausalLM.from_pretrained(
         pretrained_model_name_or_path=lora_model_path,
-        device_map="cpu",
+        device_map=device,
     )
 
     tokenizer = AutoTokenizer.from_pretrained(
@@ -36,7 +38,8 @@ def llm_response(model, tokenizer, question) -> str:
         tokenizer, skip_prompt=True, skip_special_tokens=True
     )
 
-    inputs = tokenizer(question, return_tensors="pt").to(model.device)
+    prompt = format_inference_prompt(question)
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
 
     generation_kwargs = dict(
         inputs,
