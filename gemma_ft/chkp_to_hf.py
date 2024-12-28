@@ -48,7 +48,7 @@ def load_model(repo_id: str = "google/gemma-2-2b-jpn-it") -> tuple:
 def chkp_to_hf(chkp_path: str, model_name: str, save_name: str):
     base_model, tokenizer = load_model(model_name)
     peft_model = PeftModel.from_pretrained(base_model, chkp_path)
-    merged_model = peft_model.merge_and_unload()    # これをしないとconfig.jsonが出力されない
+    merged_model = peft_model.merge_and_unload()  # これをしないとconfig.jsonが出力されない
     merged_model.save_pretrained(save_name)
     tokenizer.save_pretrained(save_name)
 
